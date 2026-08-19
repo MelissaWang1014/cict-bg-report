@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calibrated Intervention-Conditioned Transformer for Blood Glucose Dynamics</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel: #f6f7f9;
+    --panel-2: #eef0f3;
+    --border: #e1e4e9;
+    --text: #1a1d23;
+    --text-dim: #5f6773;
+    --accent: #2454a6;
+    --accent-2: #1f9d55;
+    --warn: #b6741f;
+    --danger: #c0392b;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px 100px; }
+  header.hero {
+    padding: 64px 24px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: radial-gradient(ellipse at top, #eef3fb 0%, var(--bg) 70%);
+  }
+  header.hero h1 {
+    font-size: 1.85rem;
+    max-width: 720px;
+    margin: 0 auto 16px;
+    letter-spacing: -0.01em;
+    font-weight: 700;
+  }
+  header.hero .byline { margin: 0 0 4px; font-size: 1.05rem; font-weight: 600; color: var(--text); }
+  header.hero .affiliation { font-weight: 400; font-size: 0.92rem; color: var(--text-dim); display: block; margin-top: 2px; }
+  header.hero .status-tag {
+    display: inline-block;
+    margin: 14px 0 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(36,84,166,0.10);
+    border-radius: 20px;
+    padding: 4px 12px;
+  }
+  .resource-links { margin: 18px 0 6px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .badge-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .badge-link:hover { background: var(--panel-2); }
+  header.hero p.sub {
+    color: var(--text-dim);
+    max-width: 620px;
+    margin: 14px auto 0;
+    font-size: 1.0rem;
+  }
+  section { padding: 40px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+  h2 {
+    font-size: 1.3rem;
+    margin: 0 0 18px;
+    font-weight: 700;
+  }
+  p { color: #333a44; }
+  .lede { color: var(--text-dim); margin-bottom: 20px; max-width: 700px; font-size: 0.98rem; }
+  #abstract p { max-width: 760px; margin: 0 auto; font-size: 0.98rem; color: #333a44; }
+  #abstract { text-align: left; }
+
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 16px 0; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 16px 0; }
+  @media (max-width: 720px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+  .stat-label { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; }
+
+  .idea-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .idea-card .badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 9px;
+    border-radius: 6px;
+    background: rgba(36,84,166,0.10);
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .idea-card h4 { margin: 0 0 6px; font-size: 0.98rem; color: var(--text); }
+  .idea-card p { font-size: 0.87rem; margin: 0; color: var(--text-dim); }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-dim); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  tr.highlight td { color: var(--accent-2); font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .callout {
+    background: linear-gradient(180deg, rgba(36,84,166,0.06), transparent);
+    border: 1px solid rgba(36,84,166,0.25);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 18px 0;
+  }
+  .callout.finding { border-color: rgba(31,157,85,0.3); background: linear-gradient(180deg, rgba(31,157,85,0.06), transparent); }
+  .callout h4 { margin: 0 0 6px; font-size: 0.92rem; color: var(--accent-2); }
+
+  .chart-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin: 16px 0; }
+  .chart-card svg { width: 100%; height: auto; display: block; }
+  .chart-caption { color: var(--text-dim); font-size: 0.82rem; margin-top: 8px; }
+  .legend { display: flex; gap: 18px; font-size: 0.82rem; color: var(--text-dim); margin-top: 8px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+  .card.win { border-color: var(--accent-2); background: linear-gradient(180deg, rgba(31,157,85,0.08), var(--panel)); }
+  .chart-card h4.chart-title { margin: 0 0 12px; font-size: 0.92rem; color: var(--text); }
+
+  .future-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 16px 0; }
+  @media (max-width: 720px) { .future-grid { grid-template-columns: 1fr; } }
+  .future-card {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    background: var(--panel-2);
+  }
+  .future-card .step { font-size: 0.7rem; color: var(--warn); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; }
+  .future-card h4 { margin: 0 0 6px; font-size: 0.95rem; color: var(--text); }
+  .future-card p { font-size: 0.85rem; margin: 0; color: var(--text-dim); }
+
+  .pipeline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+  .pipe-step { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 0.82rem; flex: 1; min-width: 120px; text-align: center; }
+  .pipe-arrow { color: var(--accent); }
+
+  code, .mono { font-family: "SF Mono", Menlo, monospace; font-size: 0.85em; color: var(--accent-2); }
+  footer { text-align: center; padding: 32px 0 10px; color: var(--text-dim); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>Calibrated Intervention-Conditioned Transformer<br>for Blood Glucose Dynamics</h1>
+  <p class="byline">Like (Melissa) Wang<span class="affiliation">Washington University in St. Louis</span></p>
+  <p class="sub">Can we predict what would happen under a different insulin dose — and validate that prediction against ground truth? A question real patient data can never answer.</p>
+  <span class="status-tag">Baseline ladder complete · core architecture in design</span>
+</header>
+
+<div class="wrap">
+
+<!-- Abstract -->
+<section id="abstract">
+  <h2>Abstract</h2>
+  <p>Type-1 diabetes management requires patients to repeatedly choose an insulin bolus dose without ever observing what would have happened under a different choice — real patient records only ever contain the treatment actually given, never the alternative. This project uses simglucose, a differential-equation simulator of Type-1 diabetic patients, to construct genuine counterfactual ground truth by branching the same virtual patient, at the same internal physiological state, forward under multiple candidate doses. Building on this capability, the project is organized around four ideas — counterfactual ground-truth validation, a treatment-effect decomposition head, AlphaFold-style iterative refinement, and counterfactual-specific uncertainty calibration — and first establishes a rigorous six-model baseline ladder (persistence, linear regression, random forest, XGBoost, and LSTM with/without dose conditioning), evaluated identically via patient-stratified 5-fold cross-validation. The dose-conditioned LSTM already achieves the best accuracy and the most consistent performance across patients, and a validated simulator finding — candidate doses differ by only 4.4 mg/dL at 1 hour but by 62.4 mg/dL at 4 hours — motivates the project's core architectural work, currently in progress.</p>
+</section>
+
+<!-- Introduction -->
+<section id="idea">
+  <h2>Introduction</h2>
+  <p class="lede">Type-1 diabetics depend entirely on injected insulin. Existing CGM forecasting work only predicts what <i>will</i> happen — never what <i>would have</i> happened under a different dose, because a real patient can only ever receive one treatment. This project uses a branchable physiological simulator (simglucose) to make that comparison possible, and validate it against real ground truth.</p>
+
+  <div class="grid-2">
+    <div class="idea-card">
+      <span class="badge">Methodology</span>
+      <h4>Counterfactual Ground-Truth Validation</h4>
+      <p>Same virtual patient, same internal state, branched into multiple insulin doses — each resulting trajectory is genuinely true. Impossible with real patient data.</p>
+    </div>
+    <div class="idea-card">
+      <span class="badge">Architecture</span>
+      <h4>Treatment-Effect Decomposition Head</h4>
+      <p>Model output = no-intervention baseline (Y0) + dose-induced delta (τ), not a single black-box number.</p>
+    </div>
+    <div class="idea-card">
+      <span class="badge">Architecture</span>
+      <h4>AlphaFold-style Iterative Refinement</h4>
+      <p>Coarse prediction first, then recycle and refine — concentrated on the hardest post-dose response window.</p>
+    </div>
+    <div class="idea-card">
+      <span class="badge">Evaluation</span>
+      <h4>Counterfactual-Specific Calibration</h4>
+      <p>A small ensemble scores uncertainty separately for factual vs. hypothetical predictions.</p>
+    </div>
+  </div>
+</section>
+
+<!-- The Data -->
+<section id="data">
+  <h2>The Data</h2>
+
+  <div class="grid-4">
+    <div class="card"><div class="stat-num">30</div><div class="stat-label">virtual patients</div></div>
+    <div class="card"><div class="stat-num">1,500</div><div class="stat-label">simulation files</div></div>
+    <div class="card"><div class="stat-num">9.3M</div><div class="stat-label">time-step rows</div></div>
+    <div class="card"><div class="stat-num">11×</div><div class="stat-label">candidate doses / branch</div></div>
+  </div>
+
+  <div class="pipeline">
+    <div class="pipe-step">Raw CSV</div><div class="pipe-arrow">→</div>
+    <div class="pipe-step">Index table</div><div class="pipe-arrow">→</div>
+    <div class="pipe-step">PyTorch Dataset</div><div class="pipe-arrow">→</div>
+    <div class="pipe-step">Model</div>
+  </div>
+
+  <div class="chart-card">
+    <h4 class="chart-title">Same starting point, different doses — watch them diverge</h4>
+    <svg viewBox="0 0 640 300" role="img" aria-label="Five candidate-dose glucose trajectories branching from the same point over 4 hours">
+      <g stroke="#e7e9ed" stroke-width="1">
+        <line x1="50" y1="173.33" x2="620" y2="173.33"/>
+        <line x1="50" y1="96.67" x2="620" y2="96.67"/>
+        <line x1="50" y1="20" x2="620" y2="20"/>
+      </g>
+      <line x1="50" y1="250" x2="620" y2="250" stroke="#c9ced6" stroke-width="1.5"/>
+      <line x1="194.30" y1="20" x2="194.30" y2="250" stroke="#b7bcc4" stroke-width="1" stroke-dasharray="4 4"/>
+      <g fill="#5f6773" font-size="11" text-anchor="end" font-family="monospace">
+        <text x="44" y="254">100</text>
+        <text x="44" y="177.33">140</text>
+        <text x="44" y="100.67">180</text>
+        <text x="44" y="24">220</text>
+      </g>
+      <g fill="#5f6773" font-size="10.5" text-anchor="middle">
+        <text x="50" y="266">0h</text>
+        <text x="194.30" y="266">1h</text>
+        <text x="338.61" y="266">2h</text>
+        <text x="482.91" y="266">3h</text>
+        <text x="620" y="266">~4h</text>
+      </g>
+
+      <polyline points="50,148.32 78.86,162.83 107.72,177.88 136.58,169.02 165.44,139.47 194.30,115.00 223.16,89.84 252.02,64.15 280.89,56.10 309.75,67.61 338.61,72.56 367.47,79.70 396.33,86.55 425.19,112.00 454.05,118.69 482.91,83.37 511.77,78.90 540.63,82.69 569.49,83.56 598.35,83.96 620,66.21"
+        fill="none" stroke="#2454a6" stroke-width="2"/>
+      <polyline points="50,148.32 78.86,162.85 107.72,177.98 136.58,169.40 165.44,140.49 194.30,117.02 223.16,93.25 252.02,69.20 280.89,63.00 309.75,76.52 338.61,83.56 367.47,92.77 396.33,101.66 425.19,129.10 454.05,137.61 482.91,104.02 511.77,101.13 540.63,106.34 569.49,108.51 598.35,110.08 620,93.11"
+        fill="none" stroke="#6a8fd0" stroke-width="2"/>
+      <polyline points="50,148.32 78.86,162.85 107.72,178.13 136.58,169.98 165.44,142.01 194.30,120.01 223.16,98.20 252.02,76.58 280.89,73.07 309.75,89.49 338.61,99.48 367.47,111.63 396.33,123.42 425.19,153.56 454.05,164.65 482.91,133.41 511.77,132.66 540.63,139.79 569.49,143.68 598.35,146.80 620,130.82"
+        fill="none" stroke="#1a1d23" stroke-width="2.75"/>
+      <polyline points="50,148.32 78.86,162.85 107.72,178.25 136.58,170.56 165.44,143.52 194.30,122.94 223.16,103.08 252.02,83.78 280.89,82.88 309.75,102.04 338.61,114.80 367.47,129.70 396.33,144.06 425.19,176.62 454.05,189.94 482.91,160.72 511.77,161.78 540.63,170.49 569.49,175.78 598.35,180.11 620,165.01"
+        fill="none" stroke="#b6741f" stroke-width="2"/>
+      <polyline points="50,148.32 78.86,162.87 107.72,178.35 136.58,170.95 165.44,144.51 194.30,124.87 223.16,106.27 252.02,88.50 280.89,89.29 309.75,110.17 338.61,124.67 367.47,141.25 396.33,157.17 425.19,191.16 454.05,205.78 482.91,177.68 511.77,179.74 540.63,189.34 569.49,195.39 598.35,200.40 620,185.71"
+        fill="none" stroke="#c0392b" stroke-width="2"/>
+      <circle cx="50" cy="148.32" r="3.5" fill="#1a1d23"/>
+    </svg>
+    <div class="legend">
+      <span><span class="swatch" style="background:#2454a6"></span>0× (no bolus)</span>
+      <span><span class="swatch" style="background:#6a8fd0"></span>0.4×</span>
+      <span><span class="swatch" style="background:#1a1d23"></span>1× — actual dose given</span>
+      <span><span class="swatch" style="background:#b6741f"></span>1.6×</span>
+      <span><span class="swatch" style="background:#c0392b"></span>2×</span>
+    </div>
+    <div class="chart-caption">Real simulator branch data (5 of the 11 candidate doses shown), all starting from the same patient state. At the 1-hour mark (dashed line) the five curves are still tightly bunched; by 4 hours, more insulin has clearly pulled glucose lower — this is the same branch point behind the 4.4 mg/dL / 62.4 mg/dL finding, now shown as it unfolds over time rather than as two snapshots.</div>
+  </div>
+</section>
+
+<!-- Results So Far -->
+<section id="results">
+  <h2>Results So Far — Baseline Ladder</h2>
+  <p class="lede">Six models of increasing complexity, all evaluated on the same 5-fold patient split, so any improvement is real and quantifiable — not traditional ML → LSTM without dose → LSTM with dose.</p>
+
+  <table>
+    <thead><tr><th>Model</th><th class="num">RMSE (mg/dL)</th></tr></thead>
+    <tbody>
+      <tr><td>Persistence (naive)</td><td class="num">25.4 ± 5.1</td></tr>
+      <tr><td>Linear Regression</td><td class="num">21.0 ± 4.5</td></tr>
+      <tr><td>Random Forest</td><td class="num">19.7 ± 3.9</td></tr>
+      <tr><td>XGBoost</td><td class="num">19.9 ± 7.1</td></tr>
+      <tr><td>LSTM — no dose info</td><td class="num">19.7 ± 7.0</td></tr>
+      <tr class="highlight"><td>LSTM — with dose info</td><td class="num">18.4 ± 5.2</td></tr>
+    </tbody>
+  </table>
+
+  <div class="chart-card">
+    <svg viewBox="0 0 640 300" role="img" aria-label="Bar chart comparing RMSE across six models">
+      <g stroke="#e7e9ed" stroke-width="1">
+        <line x1="50" y1="20" x2="630" y2="20"/>
+        <line x1="50" y1="90" x2="630" y2="90"/>
+        <line x1="50" y1="160" x2="630" y2="160"/>
+      </g>
+      <line x1="50" y1="230" x2="630" y2="230" stroke="#c9ced6" stroke-width="1.5"/>
+      <g fill="#5f6773" font-size="11" text-anchor="end" font-family="monospace">
+        <text x="44" y="24">32</text>
+        <text x="44" y="94">24</text>
+        <text x="44" y="164">16</text>
+      </g>
+      <rect x="72.5" y="7.82" width="50" height="222.18" fill="#a7adb7" rx="3"/>
+      <rect x="167.5" y="46.00" width="50" height="184.00" fill="#a7adb7" rx="3"/>
+      <rect x="262.5" y="57.44" width="50" height="172.56" fill="#a7adb7" rx="3"/>
+      <rect x="357.5" y="55.55" width="50" height="174.45" fill="#a7adb7" rx="3"/>
+      <rect x="452.5" y="57.90" width="50" height="172.10" fill="#a7adb7" rx="3"/>
+      <rect x="547.5" y="68.72" width="50" height="161.28" fill="#2454a6" rx="3"/>
+      <g fill="#5f6773" font-size="10.5" text-anchor="middle">
+        <text x="97.5" y="246">Persistence</text>
+        <text x="192.5" y="246">Linear Reg</text>
+        <text x="287.5" y="246">Random Forest</text>
+        <text x="382.5" y="246">XGBoost</text>
+        <text x="477.5" y="246">LSTM (no dose)</text>
+        <text x="572.5" y="246" fill="#2454a6" font-weight="600">LSTM (+dose)</text>
+      </g>
+    </svg>
+    <div class="chart-caption">LSTM with dose information wins on accuracy and is the most consistent across patients.</div>
+  </div>
+
+  <div class="callout finding">
+    <h4>Two takeaways</h4>
+    <p style="margin:0 0 6px;">Patient physiology genuinely varies — the same subset of patients is hardest to predict across all six models, not a fluke of any one method.</p>
+    <p style="margin:0;">Seeing the dose helps, and helps most on exactly those hard patients — a clean signal that treatment information is worth architecting around.</p>
+  </div>
+
+  <div class="chart-card">
+    <h4 class="chart-title">Does the model actually track the real trajectory?</h4>
+    <svg viewBox="0 0 640 300" role="img" aria-label="True vs predicted CGM trajectory for one held-out test window">
+      <g stroke="#e7e9ed" stroke-width="1">
+        <line x1="50" y1="239.55" x2="620" y2="239.55"/>
+        <line x1="50" y1="176.82" x2="620" y2="176.82"/>
+        <line x1="50" y1="114.09" x2="620" y2="114.09"/>
+        <line x1="50" y1="51.36" x2="620" y2="51.36"/>
+      </g>
+      <line x1="50" y1="250" x2="620" y2="250" stroke="#c9ced6" stroke-width="1.5"/>
+      <g fill="#5f6773" font-size="11" text-anchor="end" font-family="monospace">
+        <text x="44" y="243.55">130</text>
+        <text x="44" y="180.82">160</text>
+        <text x="44" y="118.09">190</text>
+        <text x="44" y="55.36">220</text>
+      </g>
+      <g fill="#5f6773" font-size="10.5" text-anchor="middle">
+        <text x="50" y="266">0 min</text>
+        <text x="200" y="266">15 min</text>
+        <text x="350" y="266">30 min</text>
+        <text x="500" y="266">45 min</text>
+        <text x="620" y="266">57 min</text>
+      </g>
+      <polyline points="50,223.03 80,220.35 110,217.36 140,214.64 170,212.93 200,208.39 230,196.07 260,183.46 290,170.86 320,158.48 350,146.51 380,135.21 410,124.72 440,115.23 470,106.84 500,99.66 530,93.57 560,88.32 590,83.47 620,78.66"
+        fill="none" stroke="#1a1d23" stroke-width="2.5"/>
+      <polyline points="50,229.07 80,232.56 110,229.22 140,219.76 170,214.43 200,198.37 230,184.43 260,168.56 290,155.32 320,135.21 350,123.47 380,107.63 410,89.73 440,78.06 470,73.28 500,58.74 530,50.0 560,47.30 590,42.03 620,34.92"
+        fill="none" stroke="#2454a6" stroke-width="2.5" stroke-dasharray="6 4"/>
+    </svg>
+    <div class="legend">
+      <span><span class="swatch" style="background:#1a1d23"></span>True CGM (simulator ground truth)</span>
+      <span><span class="swatch" style="background:#2454a6"></span>LSTM (with dose) — 20-step forecast</span>
+    </div>
+    <div class="chart-caption">One held-out test window, LSTM with dose info. RMSE on this window: 13.3 mg/dL, close to that fold's average — a representative example, not a cherry-picked best case.</div>
+  </div>
+
+  <div class="chart-card">
+    <h4 class="chart-title">LSTM configuration search (Fold 1)</h4>
+    <div class="grid-3">
+      <div class="card win">
+        <div class="stat-label" style="margin-bottom:6px;">hidden=64, layers=2, lr=1e-3, patience=3</div>
+        <div class="stat-num" style="color:var(--accent-2);">15.030</div>
+        <div class="stat-label">RMSE (mg/dL) — selected</div>
+      </div>
+      <div class="card">
+        <div class="stat-label" style="margin-bottom:6px;">hidden=64, layers=2, lr=3e-4, patience=5</div>
+        <div class="stat-num">15.886</div>
+        <div class="stat-label">RMSE (mg/dL)</div>
+      </div>
+      <div class="card">
+        <div class="stat-label" style="margin-bottom:6px;">hidden=128, layers=2, lr=1e-3, patience=3</div>
+        <div class="stat-num">15.750</div>
+        <div class="stat-label">RMSE (mg/dL)</div>
+      </div>
+    </div>
+    <div class="chart-caption">A small search run on Fold 1 before committing to a configuration — the original setting held up best and was carried forward unchanged, rather than further tuned, to keep the baseline honest.</div>
+  </div>
+</section>
+
+<!-- Next Steps -->
+<section id="next">
+  <h2>Next Steps</h2>
+  <div class="future-grid">
+    <div class="future-card">
+      <div class="step">Backbone</div>
+      <h4>Patch Tokenization + Dose as a Token</h4>
+      <p>Replace the LSTM with a Transformer; group history into patches, and let the dose attend directly with history instead of being tacked on at the end.</p>
+    </div>
+    <div class="future-card">
+      <div class="step">Output</div>
+      <h4>Treatment-Effect Decomposition Head</h4>
+      <p>Explicitly split predictions into baseline + treatment effect.</p>
+    </div>
+    <div class="future-card">
+      <div class="step">Refinement</div>
+      <h4>Iterative Refinement</h4>
+      <p>AlphaFold-style recycling, concentrated on the nonlinear post-dose window.</p>
+    </div>
+    <div class="future-card">
+      <div class="step">Evaluation</div>
+      <h4>Counterfactual Validation + Explainability</h4>
+      <p>Score predictions against true simulator branches; calibrate uncertainty; visualize attention and case studies.</p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<footer>Calibrated Intervention-Conditioned Transformer for Blood Glucose Dynamics · simglucose-based in-silico study</footer>
+
+</body>
+</html>
